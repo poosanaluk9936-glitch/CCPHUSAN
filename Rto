@@ -1,0 +1,336 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+
+local config = require(
+	ReplicatedStorage:WaitForChild("BanPaHubConfig")
+)
+
+local remote = ReplicatedStorage:WaitForChild("BanPaHubRemote")
+
+local boxEnabled = false
+local speedEnabled = false
+local speedValue = config.DefaultSpeed
+
+--------------------------------------------------
+-- GUI
+--------------------------------------------------
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "BanPaHub"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local main = Instance.new("Frame")
+main.Name = "Main"
+main.Size = UDim2.fromOffset(330, 390)
+main.Position = UDim2.new(0.5, -165, 0.5, -195)
+main.BackgroundColor3 = config.PanelColor
+main.BorderSizePixel = 0
+main.Parent = gui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 16)
+mainCorner.Parent = main
+
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 1.5
+stroke.Color = config.BoxColor
+stroke.Transparency = 0.35
+stroke.Parent = main
+
+--------------------------------------------------
+-- HEADER
+--------------------------------------------------
+
+local header = Instance.new("Frame")
+header.Size = UDim2.new(1, 0, 0, 70)
+header.BackgroundTransparency = 1
+header.Parent = main
+
+local logo = Instance.new("TextLabel")
+logo.Size = UDim2.new(1, -60, 0, 35)
+logo.Position = UDim2.fromOffset(18, 8)
+logo.BackgroundTransparency = 1
+logo.Text = "⚡ BAN PA HUB"
+logo.TextColor3 = config.BoxColor
+logo.Font = Enum.Font.GothamBlack
+logo.TextSize = 25
+logo.TextXAlignment = Enum.TextXAlignment.Left
+logo.Parent = header
+
+local subtitle = Instance.new("TextLabel")
+subtitle.Size = UDim2.new(1, -60, 0, 20)
+subtitle.Position = UDim2.fromOffset(20, 40)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = "UNIVERSAL TRAINING PANEL"
+subtitle.TextColor3 = Color3.fromRGB(150, 155, 170)
+subtitle.Font = Enum.Font.GothamBold
+subtitle.TextSize = 10
+subtitle.TextXAlignment = Enum.TextXAlignment.Left
+subtitle.Parent = header
+
+--------------------------------------------------
+-- MINIMIZE
+--------------------------------------------------
+
+local minimize = Instance.new("TextButton")
+minimize.Size = UDim2.fromOffset(38, 38)
+minimize.Position = UDim2.new(1, -48, 0, 15)
+minimize.BackgroundColor3 = config.ButtonColor
+minimize.Text = "—"
+minimize.TextColor3 = config.TextColor
+minimize.Font = Enum.Font.GothamBlack
+minimize.TextSize = 20
+minimize.Parent = header
+
+local minCorner = Instance.new("UICorner")
+minCorner.CornerRadius = UDim.new(0, 10)
+minCorner.Parent = minimize
+
+--------------------------------------------------
+-- CONTENT
+--------------------------------------------------
+
+local content = Instance.new("Frame")
+content.Size = UDim2.new(1, -30, 1, -85)
+content.Position = UDim2.fromOffset(15, 75)
+content.BackgroundTransparency = 1
+content.Parent = main
+
+local function createButton(text, y)
+	local button = Instance.new("TextButton")
+
+	button.Size = UDim2.new(1, 0, 0, 48)
+	button.Position = UDim2.fromOffset(0, y)
+
+	button.BackgroundColor3 = config.ButtonColor
+	button.BorderSizePixel = 0
+
+	button.Text = text
+	button.TextColor3 = config.TextColor
+	button.Font = Enum.Font.GothamBold
+	button.TextSize = 15
+
+	button.Parent = content
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 11)
+	corner.Parent = button
+
+	return button
+end
+
+--------------------------------------------------
+-- BOX BUTTON
+--------------------------------------------------
+
+local boxButton = createButton(
+	"□  PLAYER BOX     OFF",
+	0
+)
+
+--------------------------------------------------
+-- SPEED BUTTON
+--------------------------------------------------
+
+local speedButton = createButton(
+	"⚡ SPEED          OFF",
+	60
+)
+
+--------------------------------------------------
+-- SPEED VALUE
+--------------------------------------------------
+
+local speedLabel = Instance.new("TextLabel")
+
+speedLabel.Size = UDim2.new(1, 0, 0, 30)
+speedLabel.Position = UDim2.fromOffset(0, 122)
+
+speedLabel.BackgroundTransparency = 1
+
+speedLabel.Text = "WALKSPEED  :  " .. speedValue
+speedLabel.TextColor3 = config.TextColor
+
+speedLabel.Font = Enum.Font.GothamBold
+speedLabel.TextSize = 15
+
+speedLabel.Parent = content
+
+--------------------------------------------------
+-- SPEED SLIDER
+--------------------------------------------------
+
+local sliderBack = Instance.new("Frame")
+
+sliderBack.Size = UDim2.new(1, 0, 0, 12)
+sliderBack.Position = UDim2.fromOffset(0, 160)
+
+sliderBack.BackgroundColor3 = Color3.fromRGB(45, 48, 60)
+sliderBack.BorderSizePixel = 0
+
+sliderBack.Parent = content
+
+local sliderCorner = Instance.new("UICorner")
+sliderCorner.CornerRadius = UDim.new(1, 0)
+sliderCorner.Parent = sliderBack
+
+local sliderFill = Instance.new("Frame")
+
+sliderFill.Size = UDim2.new(
+	(speedValue - config.MinSpeed) /
+	(config.MaxSpeed - config.MinSpeed),
+	0,
+	1,
+	0
+)
+
+sliderFill.BackgroundColor3 = config.BoxColor
+sliderFill.BorderSizePixel = 0
+sliderFill.Parent = sliderBack
+
+local fillCorner = Instance.new("UICorner")
+fillCorner.CornerRadius = UDim.new(1, 0)
+fillCorner.Parent = sliderFill
+
+local knob = Instance.new("TextButton")
+
+knob.Size = UDim2.fromOffset(22, 22)
+knob.AnchorPoint = Vector2.new(0.5, 0.5)
+
+knob.Position = UDim2.new(
+	(speedValue - config.MinSpeed) /
+	(config.MaxSpeed - config.MinSpeed),
+	0,
+	0.5,
+	0
+)
+
+knob.BackgroundColor3 = Color3.fromRGB(245, 245, 255)
+knob.Text = ""
+knob.Parent = sliderBack
+
+local knobCorner = Instance.new("UICorner")
+knobCorner.CornerRadius = UDim.new(1, 0)
+knobCorner.Parent = knob
+
+--------------------------------------------------
+-- BOX SIZE
+--------------------------------------------------
+
+local boxSizeLabel = Instance.new("TextLabel")
+
+boxSizeLabel.Size = UDim2.new(1, 0, 0, 30)
+boxSizeLabel.Position = UDim2.fromOffset(0, 190)
+
+boxSizeLabel.BackgroundTransparency = 1
+boxSizeLabel.Text = "BOX SIZE  :  4 x 6 x 2"
+
+boxSizeLabel.TextColor3 = Color3.fromRGB(190, 195, 210)
+boxSizeLabel.Font = Enum.Font.GothamBold
+boxSizeLabel.TextSize = 13
+
+boxSizeLabel.Parent = content
+
+--------------------------------------------------
+-- BOX SIZE BUTTONS
+--------------------------------------------------
+
+local smaller = createButton("－  SMALLER BOX", 225)
+local bigger = createButton("＋  BIGGER BOX", 283)
+
+--------------------------------------------------
+-- PLAYER BOX
+--------------------------------------------------
+
+local function removeBox(target)
+
+	local character = target.Character
+
+	if not character then
+		return
+	end
+
+	local root = character:FindFirstChild("HumanoidRootPart")
+
+	if not root then
+		return
+	end
+
+	local old = root:FindFirstChild("BanPaPlayerBox")
+
+	if old then
+		old:Destroy()
+	end
+end
+
+local currentBoxSize = config.BoxSize
+
+local function createBox(target)
+
+	if target == player then
+		return
+	end
+
+	local character = target.Character
+
+	if not character then
+		return
+	end
+
+	local root = character:FindFirstChild("HumanoidRootPart")
+
+	if not root then
+		return
+	end
+
+	local old = root:FindFirstChild("BanPaPlayerBox")
+
+	if old then
+		old.Size = currentBoxSize
+		return
+	end
+
+	local box = Instance.new("BoxHandleAdornment")
+
+	box.Name = "BanPaPlayerBox"
+	box.Adornee = root
+
+	box.Size = currentBoxSize
+
+	box.Color3 = config.BoxColor
+	box.Transparency = config.BoxTransparency
+
+	box.AlwaysOnTop = true
+	box.ZIndex = 5
+
+	box.Parent = root
+end
+
+local function updateBoxes()
+
+	for _, target in ipairs(Players:GetPlayers()) do
+
+		if boxEnabled then
+			createBox(target)
+		else
+			removeBox(target)
+		end
+
+	end
+
+end
+
+--------------------------------------------------
+-- BOX TOGGLE
+--------------------------------------------------
+
+boxButton.MouseButton1Click:Connect(function()
+
+	boxEnabled = not boxEnabled
+
+	if
